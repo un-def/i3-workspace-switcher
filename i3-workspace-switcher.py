@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import json
 import fcntl
 import signal
 import argparse
@@ -49,7 +50,7 @@ class EventListener(object):
         if self.size and len(self.history) > self.size:
             self.history = self.history[:self.size]
         with open(self.history_file_path, 'w') as history_file_obj:
-            history_file_obj.writelines(ws + '\n' for ws in self.history)
+            json.dump(self.history, history_file_obj)
 
 
 class GUI(object):
@@ -137,9 +138,12 @@ elif not os.path.exists(history_file_path):
 
 else:
     with open(history_file_path, 'r') as history_file_obj:
-        history = list(ws.strip() for ws in history_file_obj.readlines())
-    if len(history) < 2:
-        sys.exit()
+        try:
+            history = json.load(history_file_obj)
+            if not isinstance(history, list) or len(history) < 2:
+                raise ValueError
+        except ValueError:
+            sys.exit()
 
     pid_file_path = os.path.join(run_dir, 'i3-workspace-switcher.gui.pid')
     mode = 'r+' if os.path.exists(pid_file_path) else 'w'
