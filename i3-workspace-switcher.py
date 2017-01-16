@@ -27,7 +27,7 @@ class EventListener(object):
         i3.on('workspace::focus', self.on_workspace_focus)
         self.i3 = i3
         self.history_file_path = history_file_path
-        self.size = size if size > 1 else None
+        self.size = size if size is not None and size > 1 else None
         self.history = []
 
     def run(self):
