@@ -13,7 +13,7 @@ A workspace switcher for [i3 window manager][i3] that acts like Windows Alt-Tab 
 
 * Python (2 or 3)
 * Tcl/Tk/Tkinter — `apt-get install python-tk` on Ubuntu
-* [i3ipc-python][i3ipc-python] — `pip install i3ipc-python`
+* [i3ipc-python][i3ipc-python] — `pip install i3ipc`
 
 
 
