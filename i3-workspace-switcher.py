@@ -71,7 +71,9 @@ class EventListener(object):
             return
         current = Workspace.from_container(event.current)
         old = Workspace.from_container(event.old) if event.old else None
-        event_handler(current, old)
+        is_changed = event_handler(current, old)
+        if is_changed:
+            self.write_history()
 
     def on_focus(self, current, old):
         if not self.history and old:
@@ -83,7 +85,15 @@ class EventListener(object):
         self.history.insert(0, current)
         if self.size and len(self.history) > self.size:
             self.history = self.history[:self.size]
-        self.write_history()
+        return True
+
+    def on_rename(self, current, old):
+        try:
+            index = self.history.index(current)
+        except ValueError:
+            return False
+        self.history[index] = current
+        return True
 
 
 class GUI(object):
