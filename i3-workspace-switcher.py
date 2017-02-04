@@ -74,6 +74,13 @@ class EventListener(object):
         with open(self.history_file_path, 'w') as history_file_obj:
             json.dump(self.history, history_file_obj, cls=HistoryJSONEncoder)
 
+    def remove_workspace(self, workspace):
+        try:
+            self.history.remove(workspace)
+        except ValueError:
+            return False
+        return True
+
     def dispatch_event(self, connection, event):
         event_handler = getattr(self, 'on_' + event.change, None)
         if not event_handler:
@@ -87,10 +94,7 @@ class EventListener(object):
     def on_focus(self, current, old):
         if not self.history and old:
             self.history.append(old)
-        try:
-            self.history.remove(current)
-        except ValueError:
-            pass
+        self.remove_workspace(current)
         self.history.insert(0, current)
         if self.size and len(self.history) > self.size:
             self.history = self.history[:self.size]
@@ -103,6 +107,9 @@ class EventListener(object):
             return False
         self.history[index] = current
         return True
+
+    def on_empty(self, current, old):
+        return self.remove_workspace(current)
 
 
 class GUI(object):
