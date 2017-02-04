@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import time
 import json
 import fcntl
 import signal
@@ -60,6 +61,14 @@ class EventListener(object):
         except OSError:
             pass
         self.i3.main()
+
+    def run_forever(self):
+        while True:
+            try:
+                self.run()
+            except Exception:
+                time.sleep(1)
+            self.history = []
 
     def write_history(self):
         with open(self.history_file_path, 'w') as history_file_obj:
@@ -175,7 +184,7 @@ if __name__ == '__main__':
 
     if args.daemon:
         EventListener(i3=i3, history_file_path=history_file_path,
-                      size=args.size).run()
+                      size=args.size).run_forever()
 
     elif not os.path.exists(history_file_path):
         sys.exit("history file doesn't exist")
