@@ -48,11 +48,12 @@ class HistoryJSONEncoder(json.JSONEncoder):
 
 class EventListener(object):
 
-    def __init__(self, i3, history_file_path, size=None):
+    def __init__(self, i3, history_file_path, size=None, keep_empty=False):
         i3.on('workspace', self.dispatch_event)
         self.i3 = i3
         self.history_file_path = history_file_path
         self.size = size if isinstance(size, int) and size > 1 else None
+        self.keep_empty = keep_empty
         self.history = []
 
     def run(self):
@@ -74,7 +75,14 @@ class EventListener(object):
         with open(self.history_file_path, 'w') as history_file_obj:
             json.dump(self.history, history_file_obj, cls=HistoryJSONEncoder)
 
-    def remove_workspace(self, workspace):
+    def remove_workspace(self, workspace, by_name=False):
+        if by_name:
+            for index, history_workspace in enumerate(self.history):
+                if history_workspace.name == workspace.name:
+                    del self.history[index]
+                    return True
+            return False
+        # by id
         try:
             self.history.remove(workspace)
         except ValueError:
@@ -108,7 +116,14 @@ class EventListener(object):
         self.history[index] = current
         return True
 
+    def on_init(self, current, old):
+        if not self.keep_empty:
+            return False
+        return self.remove_workspace(current, by_name=True)
+
     def on_empty(self, current, old):
+        if self.keep_empty:
+            return False
         return self.remove_workspace(current)
 
 
@@ -176,22 +191,27 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--size',
                         type=int,
                         default=None,
-                        help='limit history size')
+                        help='daemon option: limit history size')
+    parser.add_argument('-k', '--keep-empty',
+                        action='store_true',
+                        help='daemon option: keep empty workspaces in history')
     parser.add_argument('-m', '--mod',
                         default='Mod4',
                         choices=KEY_MAPPING.keys(),
-                        help='i3 modifier key; default: Mod4 (Super)')
+                        help='client option: '
+                             'i3 modifier key; default: Mod4 (Super)')
     parser.add_argument('-r', '--reverse',
                         action='store_true',
-                        help='reverse order')
+                        help='client option: reverse order')
     args, extra_args = parser.parse_known_args()
 
     history_file_path = os.path.join(run_dir, 'i3-workspace-switcher.history')
     i3 = i3ipc.Connection()
 
     if args.daemon:
-        EventListener(i3=i3, history_file_path=history_file_path,
-                      size=args.size).run_forever()
+        daemon = EventListener(i3=i3, history_file_path=history_file_path,
+                               size=args.size, keep_empty=args.keep_empty)
+        daemon.run_forever()
 
     elif not os.path.exists(history_file_path):
         sys.exit("history file doesn't exist")
