@@ -49,7 +49,14 @@ for_window [class="^I3-workspace-switcher$"] floating enable border none
 
 
 
+### License
+
+This software is licensed under the [MIT License][license].
+
+
+
 [i3]: https://i3wm.org/
 [screenshot-preview]: https://i.imgur.com/kIkZhQk.png
 [screenshot]: https://i.imgur.com/NtiY6wS.png
 [i3ipc-python]: https://github.com/acrisci/i3ipc-python
+[license]: https://github.com/un-def/i3-workspace-switcher/blob/master/LICENSE
